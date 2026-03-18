@@ -1,0 +1,130 @@
+name: Storybook
+description: Create or improve Storybook stories for a component.
+title: "storybook: "
+labels:
+  - storybook
+  - ai-task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to create or improve Storybook stories for a component.
+        Provide enough detail so that an AI agent can implement the stories without ambiguity.
+
+  - type: input
+    id: component_name
+    attributes:
+      label: Component Name
+      description: The exact name of the component as it appears in the codebase.
+      placeholder: e.g. UserAvatarButton
+    validations:
+      required: true
+
+  - type: input
+    id: component_path
+    attributes:
+      label: Component Path
+      description: Relative path to the component file from the repository root.
+      placeholder: e.g. src/components/UserAvatarButton/UserAvatarButton.tsx
+    validations:
+      required: true
+
+  - type: textarea
+    id: states_to_cover
+    attributes:
+      label: States / Variants to Cover
+      description: List each visual state or variant that must have a dedicated story.
+      placeholder: |
+        - Default (no avatar image)
+        - With avatar image
+        - Loading state
+        - Disabled state
+        - With long display name (overflow)
+    validations:
+      required: true
+
+  - type: textarea
+    id: props_controls
+    attributes:
+      label: Props / Controls to Expose
+      description: Which props should be configurable via Storybook controls?
+      placeholder: |
+        - size: 'sm' | 'md' | 'lg'
+        - disabled: boolean
+        - src: string (avatar URL)
+        - displayName: string
+    validations:
+      required: true
+
+  - type: textarea
+    id: mock_data
+    attributes:
+      label: Mock Data Needs
+      description: Describe any mock data, fixtures, or decorators required.
+      placeholder: |
+        - Mock user object: { id, displayName, avatarUrl }
+        - No network calls; mock fetch with static fixture
+    validations:
+      required: false
+
+  - type: textarea
+    id: accessibility_notes
+    attributes:
+      label: Accessibility Notes
+      description: >
+        Any ARIA roles, labels, or keyboard interaction requirements
+        that should be reflected in the stories or checked with an a11y addon.
+      placeholder: |
+        - Must have aria-label when no visible text is present
+        - Verify color contrast in all states
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What must be true for this task to be considered complete?
+      placeholder: |
+        - [ ] A story file exists at the expected path
+        - [ ] All listed states have dedicated stories
+        - [ ] Controls panel exposes the listed props
+        - [ ] Stories render without console errors
+        - [ ] a11y addon reports no critical violations
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation / How to Verify
+      description: Steps a reviewer should follow to verify the work.
+      placeholder: |
+        1. Run `npx storybook dev`
+        2. Navigate to the component in the sidebar
+        3. Cycle through all stories and verify each state renders correctly
+        4. Open the Controls panel and adjust props
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: behavior_constraint
+    attributes:
+      label: Constraints
+      options:
+        - label: >
+            No component behavior or logic may be changed as part of this task
+            unless explicitly approved above.
+          required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Anything else that would help the AI agent implement this correctly.
+      placeholder: |
+        - Related PR or branch
+        - Design file link
+        - Known quirks or gotchas
+    validations:
+      required: false

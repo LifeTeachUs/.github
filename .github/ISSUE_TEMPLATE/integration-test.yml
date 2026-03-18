@@ -1,0 +1,126 @@
+name: Integration Test
+description: Add integration tests for a flow involving multiple components or modules.
+title: "integration-test: "
+labels:
+  - integration-test
+  - ai-task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to add integration tests that cover a complete feature flow
+        across multiple components, hooks, or services. Keep scope to one coherent flow per issue.
+
+  - type: input
+    id: feature_name
+    attributes:
+      label: Feature / Flow Name
+      description: Short name of the feature or user flow being tested.
+      placeholder: e.g. User Login Flow, Add to Cart, Profile Image Upload
+    validations:
+      required: true
+
+  - type: textarea
+    id: involved_files
+    attributes:
+      label: Involved Files / Modules
+      description: List all files, components, hooks, or services involved in this flow.
+      placeholder: |
+        - src/features/auth/LoginScreen.tsx
+        - src/features/auth/useAuth.ts
+        - src/services/authApi.ts
+        - src/navigation/RootNavigator.tsx
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_scenarios
+    attributes:
+      label: Critical User Scenarios
+      description: >
+        Describe each end-to-end scenario that must be covered by the tests.
+        Write from the user's perspective.
+      placeholder: |
+        1. User enters valid credentials → is redirected to home screen
+        2. User enters invalid credentials → error message is displayed, remains on login screen
+        3. User submits with empty fields → inline validation errors appear
+        4. Network error during login → generic error banner is shown
+    validations:
+      required: true
+
+  - type: textarea
+    id: not_covered
+    attributes:
+      label: What Should Explicitly NOT Be Covered Yet
+      description: >
+        List any scenarios, edge cases, or related flows that are out of scope
+        for this issue and should not be added.
+      placeholder: |
+        - Password reset flow (separate issue)
+        - Biometric authentication
+        - Session persistence across app restarts
+    validations:
+      required: true
+
+  - type: textarea
+    id: mocks_dependencies
+    attributes:
+      label: Dependencies / Mocks Needed
+      description: >
+        List external dependencies that must be mocked (APIs, navigation, storage, etc.)
+        and specify the expected mock behavior.
+      placeholder: |
+        - Mock `authApi.login`: return success response for valid credentials, 401 for invalid
+        - Mock `@react-navigation/native` navigation methods
+        - No real network calls; all HTTP must be intercepted
+    validations:
+      required: true
+
+  - type: textarea
+    id: async_considerations
+    attributes:
+      label: Async / Network Considerations
+      description: >
+        Describe any loading states, async operations, or timing-sensitive behavior
+        that the tests must correctly handle.
+      placeholder: |
+        - Login button shows a spinner during the API call
+        - Tests must await navigation transition before asserting new screen
+        - Use `waitFor` / `findBy*` queries for async DOM updates
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What must be true for this task to be considered complete?
+      placeholder: |
+        - [ ] All listed scenarios have passing tests
+        - [ ] No real network requests are made during the test run
+        - [ ] No pre-existing tests are broken
+        - [ ] Tests are deterministic and do not flake
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation / How to Verify
+      description: Command or steps to run the tests and confirm results.
+      placeholder: |
+        Run: `npx vitest run src/features/auth/__tests__/LoginFlow.test.tsx`
+        All tests must pass with no console errors.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Design references, related issues, or environment notes.
+      placeholder: |
+        - Related issue: #42 (unit tests for useAuth hook)
+        - Test utilities: src/test-utils/renderWithProviders.tsx
+    validations:
+      required: false

@@ -1,0 +1,137 @@
+name: Refactor
+description: Improve code structure, readability, or maintainability without changing runtime behavior.
+title: "refactor: "
+labels:
+  - refactor
+  - ai-task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to scope a targeted refactor. The key constraint is that
+        **observable runtime behavior must remain unchanged** unless explicitly stated below.
+        Keep scope narrow — one file, component, or module per issue when possible.
+
+  - type: input
+    id: target
+    attributes:
+      label: Target File / Component / Module
+      description: The primary file or module being refactored.
+      placeholder: e.g. src/utils/dateHelpers.ts
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem Statement
+      description: What is wrong or suboptimal about the current code?
+      placeholder: |
+        - The file is 600 lines long and mixes date formatting, date arithmetic, and timezone utilities
+        - Function names are inconsistent
+        - Several functions share duplicated logic
+    validations:
+      required: true
+
+  - type: textarea
+    id: goals
+    attributes:
+      label: Goals of the Refactor
+      description: What should the code look like or achieve after the refactor?
+      placeholder: |
+        - Split into three focused modules: dateFormatting, dateArithmetic, timezone
+        - Consistent naming convention (camelCase, verb-first)
+        - Remove duplicated normalization logic into a shared helper
+    validations:
+      required: true
+
+  - type: textarea
+    id: candidate_abstractions
+    attributes:
+      label: Candidate Abstractions
+      description: >
+        Suggest any new abstractions, types, utilities, or patterns that could be introduced.
+        Leave blank if you want the AI agent to propose them.
+      placeholder: |
+        - `formatDate(date: Date, format: string): string` utility
+        - `DateRange` type for start/end pairs
+    validations:
+      required: false
+
+  - type: textarea
+    id: allowed_files
+    attributes:
+      label: Allowed Files / Scope
+      description: >
+        List files or directories the AI agent is allowed to modify or create.
+        Any file not listed here must not be touched.
+      placeholder: |
+        - src/utils/dateHelpers.ts (split into multiple files)
+        - src/utils/dateFormatting.ts (new)
+        - src/utils/dateArithmetic.ts (new)
+        - src/utils/timezone.ts (new)
+        - Update barrel: src/utils/index.ts
+    validations:
+      required: true
+
+  - type: textarea
+    id: forbidden_changes
+    attributes:
+      label: Forbidden Changes
+      description: >
+        Explicitly list what must NOT change as part of this refactor.
+      placeholder: |
+        - Public API (exported function signatures) must remain identical
+        - No changes to test files
+        - No new external dependencies
+        - No changes to business logic
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What must be true for this task to be considered complete?
+      placeholder: |
+        - [ ] All existing tests pass without modification
+        - [ ] No exported function signatures have changed
+        - [ ] No new dependencies added
+        - [ ] Build completes without errors or warnings
+        - [ ] TypeScript compiler reports no new errors
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation / How to Verify
+      description: Commands or steps to verify the refactor is safe.
+      placeholder: |
+        1. Run: `npx tsc --noEmit` — must complete with zero errors
+        2. Run: `npx vitest run src/utils/` — all tests must pass
+        3. Confirm no changes to test files via `git diff --name-only`
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: behavior_acknowledgement
+    attributes:
+      label: Behavior Contract
+      options:
+        - label: >
+            I acknowledge that observable runtime behavior must remain identical before and after
+            this refactor. Any intentional behavior change must be explicitly listed under
+            "Goals of the Refactor" above.
+          required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Links to related issues, ADRs, or code review feedback motivating this refactor.
+      placeholder: |
+        - Code review comment: <link>
+        - ADR: docs/adr/0012-date-utilities.md
+    validations:
+      required: false

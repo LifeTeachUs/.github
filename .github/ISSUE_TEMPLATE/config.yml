@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Engineering Discussion
+    url: https://github.com/orgs/LifeTeachUs/discussions
+    about: >
+      For questions, open-ended discussions, or anything that doesn't fit a
+      structured task template, please use the engineering discussion channel
+      or consult the internal documentation. Do not open a vague issue here.

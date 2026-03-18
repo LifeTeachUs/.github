@@ -1,0 +1,136 @@
+name: Tracking
+description: Add or improve product analytics or event tracking for a feature area.
+title: "tracking: "
+labels:
+  - tracking
+  - ai-task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to add or improve event tracking for a feature area.
+        Provide enough detail so that an AI agent can implement the tracking correctly
+        and consistently with the existing instrumentation patterns.
+
+  - type: input
+    id: feature_area
+    attributes:
+      label: Feature Area
+      description: The product area or screen where tracking is being added or updated.
+      placeholder: e.g. Onboarding, Checkout, Profile Settings
+    validations:
+      required: true
+
+  - type: textarea
+    id: events
+    attributes:
+      label: Events to Track
+      description: >
+        List each event that must be tracked. Use the exact event name format
+        used in the codebase (e.g. `screen_viewed`, `button_tapped`, `form_submitted`).
+      placeholder: |
+        - `onboarding_started`
+        - `onboarding_step_completed` (step 1–4)
+        - `onboarding_skipped`
+        - `onboarding_completed`
+    validations:
+      required: true
+
+  - type: textarea
+    id: event_properties
+    attributes:
+      label: Properties / Metadata per Event
+      description: >
+        For each event, list the properties that should be included in the payload.
+        Specify the property name, type, and whether it is required.
+      placeholder: |
+        `onboarding_step_completed`:
+          - step_number: number (required)
+          - step_name: string (required)
+          - time_spent_ms: number (optional)
+        
+        `onboarding_skipped`:
+          - step_number: number (required — step at which the user skipped)
+    validations:
+      required: true
+
+  - type: textarea
+    id: trigger_conditions
+    attributes:
+      label: Trigger Conditions
+      description: >
+        For each event, describe precisely when it should fire.
+        Be explicit about user actions, lifecycle hooks, or state transitions.
+      placeholder: |
+        - `onboarding_started`: fires once when the onboarding screen first mounts
+        - `onboarding_step_completed`: fires when the user taps "Continue" on each step
+        - `onboarding_skipped`: fires when the user taps "Skip" on any step
+        - `onboarding_completed`: fires after the final step's "Continue" is tapped
+    validations:
+      required: true
+
+  - type: textarea
+    id: privacy_sensitivity
+    attributes:
+      label: Privacy / Data Sensitivity
+      description: >
+        Note any privacy requirements or data sensitivity concerns for the events or properties above.
+        If none apply, write "None".
+      placeholder: |
+        - Do not include raw user input or PII in any event property
+        - `user_id` must be the anonymized internal ID, not email or phone
+        - Events on the payments screen must not include price or card details
+    validations:
+      required: true
+
+  - type: textarea
+    id: existing_patterns
+    attributes:
+      label: Existing Tracking Patterns / Reference Files
+      description: >
+        Point to existing event tracking implementations in the codebase that
+        should be used as a reference for naming, structure, and helper usage.
+      placeholder: |
+        - Reference: src/features/auth/LoginScreen.tsx (uses `useTracking` hook)
+        - Tracking helper: src/services/analytics.ts
+        - Event name constants: src/constants/analyticsEvents.ts
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What must be true for this task to be considered complete?
+      placeholder: |
+        - [ ] All listed events fire at the correct trigger points
+        - [ ] All required properties are present in each event payload
+        - [ ] No PII or sensitive data is included in any payload
+        - [ ] Event names follow the existing naming convention
+        - [ ] No pre-existing tracking is broken
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation Steps
+      description: How should the tracking be verified?
+      placeholder: |
+        1. Run the app and exercise the onboarding flow manually
+        2. Check the analytics debug output (e.g. verbose logging or debug mode)
+           to confirm each event fires with the correct payload
+        3. Run unit tests: `npx vitest run src/features/onboarding/`
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Related design specs, tracking plans, or analytics documentation.
+      placeholder: |
+        - Tracking plan doc: <link>
+        - Related issue: #55
+    validations:
+      required: false
