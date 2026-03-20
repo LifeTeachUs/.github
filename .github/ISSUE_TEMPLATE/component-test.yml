@@ -16,7 +16,7 @@ body:
     attributes:
       label: Component / Module Name
       description: The exact name of the component, hook, or utility to be tested.
-      placeholder: e.g. useDebounce, PriceDisplay, formatCurrency
+      placeholder: e.g. useOutsideClick, AutoSuggest, formatTopicStatus
     validations:
       required: true
 
@@ -25,7 +25,7 @@ body:
     attributes:
       label: Module Path
       description: Relative path to the file from the repository root.
-      placeholder: e.g. src/hooks/useDebounce.ts
+      placeholder: e.g. src/hooks/useOutsideClick.ts
     validations:
       required: true
 
@@ -38,8 +38,8 @@ body:
         Include test file path, framework, and coverage gaps if known.
       placeholder: |
         - No tests exist yet
-        - OR: Tests exist at src/hooks/__tests__/useDebounce.test.ts but only cover the happy path
-        - Framework: Vitest + React Testing Library
+        - OR: Tests exist at src/hooks/__tests__/useOutsideClick.test.ts but only cover the happy path
+        - Web: Jest + React Testing Library; Mobile: Jest + React Native Testing Library
     validations:
       required: false
 
@@ -100,8 +100,9 @@ body:
       label: Validation / How to Verify
       description: Command to run the tests and confirm results.
       placeholder: |
-        Run: `npx vitest run src/hooks/useDebounce.test.ts`
-        All tests must pass. Check coverage with `--coverage` flag.
+        Web: `npx playwright test src/components/AutoSuggest/AutoSuggest.test.ts`
+        Mobile: `maestro test tests/e2e/AutoSuggest.yaml`
+        All tests must pass with no console errors.
     validations:
       required: true
 
@@ -123,7 +124,9 @@ body:
       label: Additional Context
       description: Related issues, dependencies, or environment notes.
       placeholder: |
-        - Jest config is in jest.config.ts at repo root
-        - Test utilities are in src/test-utils/
+        - Web test utilities: src/test-utils/
+        - Web E2E: Playwright (yarn test:e2e)
+        - Mobile E2E: Maestro (yarn test:e2e on iOS simulator)
+        - Related issue: #
     validations:
       required: false

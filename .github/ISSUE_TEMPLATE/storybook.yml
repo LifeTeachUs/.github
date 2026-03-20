@@ -16,7 +16,7 @@ body:
     attributes:
       label: Component Name
       description: The exact name of the component as it appears in the codebase.
-      placeholder: e.g. UserAvatarButton
+      placeholder: e.g. Avatar
     validations:
       required: true
 
@@ -25,7 +25,7 @@ body:
     attributes:
       label: Component Path
       description: Relative path to the component file from the repository root.
-      placeholder: e.g. src/components/UserAvatarButton/UserAvatarButton.tsx
+      placeholder: e.g. src/components/global/Avatar/index.tsx
     validations:
       required: true
 
@@ -100,7 +100,7 @@ body:
       label: Validation / How to Verify
       description: Steps a reviewer should follow to verify the work.
       placeholder: |
-        1. Run `npx storybook dev`
+        1. Run `yarn run storybook`
         2. Navigate to the component in the sidebar
         3. Cycle through all stories and verify each state renders correctly
         4. Open the Controls panel and adjust props
