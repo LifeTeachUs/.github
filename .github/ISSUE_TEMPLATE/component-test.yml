@@ -1,0 +1,132 @@
+name: Component Test
+description: Add or improve isolated unit tests for a component, hook, or utility.
+title: "component-test: "
+labels:
+  - component-test
+  - ai-task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to add or improve focused, isolated tests for a single
+        component, hook, or utility. Keep scope narrow — one module per issue.
+
+  - type: input
+    id: module_name
+    attributes:
+      label: Component / Module Name
+      description: The exact name of the component, hook, or utility to be tested.
+      placeholder: e.g. useOutsideClick, AutoSuggest, formatTopicStatus
+    validations:
+      required: true
+
+  - type: input
+    id: module_path
+    attributes:
+      label: Module Path
+      description: Relative path to the file from the repository root.
+      placeholder: e.g. src/hooks/useOutsideClick.ts
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_testing
+    attributes:
+      label: Current Testing Setup
+      description: >
+        Describe the existing test setup for this module, if any.
+        Include test file path, framework, and coverage gaps if known.
+      placeholder: |
+        - No tests exist yet
+        - OR: Tests exist at src/hooks/__tests__/useOutsideClick.test.ts but only cover the happy path
+        - Web: Jest + React Testing Library; Mobile: Jest + React Native Testing Library
+    validations:
+      required: false
+
+  - type: textarea
+    id: scenarios
+    attributes:
+      label: Scenarios to Cover
+      description: List each test scenario or case that must be implemented.
+      placeholder: |
+        - Returns the original value immediately on first render
+        - Debounces updates by the specified delay
+        - Cancels pending update when component unmounts
+        - Handles delay of 0 ms (no debounce)
+    validations:
+      required: true
+
+  - type: textarea
+    id: edge_cases
+    attributes:
+      label: Edge Cases
+      description: Specific edge cases or error conditions that must be tested.
+      placeholder: |
+        - Negative delay value
+        - Rapid successive calls within the delay window
+        - Value changes to the same value (no re-render expected)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: refactor_allowed
+    attributes:
+      label: Minor Refactor for Testability Allowed?
+      description: >
+        May the AI agent make small, isolated refactors to improve testability
+        (e.g. extract a pure function, add a test ID)? No behavior changes.
+      options:
+        - "No — do not change the implementation"
+        - "Yes — minimal, non-behavior-changing refactors only"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What must be true for this task to be considered complete?
+      placeholder: |
+        - [ ] All listed scenarios have corresponding passing tests
+        - [ ] No pre-existing tests are broken
+        - [ ] Coverage for the module is at or above 80%
+        - [ ] Tests run in isolation without network or file system access
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation / How to Verify
+      description: Command to run the tests and confirm results.
+      placeholder: |
+        Web: `npx playwright test src/components/AutoSuggest/AutoSuggest.test.ts`
+        Mobile: `maestro test tests/e2e/AutoSuggest.yaml`
+        All tests must pass with no console errors.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Hard Constraints
+      options:
+        - label: No changes to public API or exported interfaces.
+          required: true
+        - label: No new dependencies may be added without explicit approval.
+          required: true
+        - label: No changes to unrelated files.
+          required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Related issues, dependencies, or environment notes.
+      placeholder: |
+        - Web test utilities: src/test-utils/
+        - Web E2E: Playwright (yarn test:e2e)
+        - Mobile E2E: Maestro (yarn test:e2e on iOS simulator)
+        - Related issue: #
+    validations:
+      required: false

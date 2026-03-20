@@ -1,0 +1,146 @@
+name: Tech Migration
+description: >
+  Incremental preparation work for a larger technical migration
+  (e.g. monorepo setup, shared package extraction, import path harmonization,
+  React Native Web readiness, compatibility analysis).
+title: "tech-migration: "
+labels:
+  - tech-migration
+  - ai-task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to scope a **single, incremental step** toward a larger technical migration.
+        This is not for uncontrolled large-scale rewrites. Each issue should represent a bounded
+        unit of work that can be reviewed and merged independently.
+
+  - type: dropdown
+    id: migration_initiative
+    attributes:
+      label: Migration Initiative
+      description: Which larger initiative does this task belong to?
+      options:
+        - Monorepo preparation
+        - Shared package extraction
+        - React Native Web readiness
+        - Import path harmonization
+        - Dependency version upgrade
+        - Build tooling modernization
+        - TypeScript strictness improvements
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_state
+    attributes:
+      label: Current State
+      description: Describe the current state of the area being migrated.
+      placeholder: |
+        - `shared/` directory contains utilities used by both web and mobile apps
+          but is not a formal package (no package.json, no explicit exports)
+        - Import paths reference relative paths like `../../shared/formatDate`
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired_state
+    attributes:
+      label: Desired Future State
+      description: Describe what the target state looks like after this incremental step.
+      placeholder: |
+        - `packages/shared/` is a proper npm workspace package with its own package.json
+        - Exports are defined via `exports` field in package.json
+        - Consumer imports use the package name: `@lifeteachus/shared/formatDate`
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope of This Task
+      description: >
+        Describe exactly what this issue covers. Be explicit about what is and is not included.
+      placeholder: |
+        IN SCOPE:
+        - Create packages/shared/package.json with workspace config
+        - Move src/shared/dateHelpers.ts → packages/shared/src/dateHelpers.ts
+        - Update all import paths in the web app to use the new package reference
+        
+        OUT OF SCOPE:
+        - Mobile app import path migration (separate issue)
+        - CI/CD pipeline changes
+        - Publishing the package to npm
+    validations:
+      required: true
+
+  - type: dropdown
+    id: output_type
+    attributes:
+      label: Expected Output
+      description: What is the primary deliverable of this task?
+      options:
+        - Refactor / code changes
+        - Compatibility report (document only)
+        - Migration proposal (document only)
+        - Package extraction
+        - Configuration changes
+        - Mixed (describe in scope)
+    validations:
+      required: true
+
+  - type: textarea
+    id: assumptions
+    attributes:
+      label: Assumptions
+      description: >
+        List any assumptions the AI agent can rely on when implementing this task.
+      placeholder: |
+        - The monorepo will use npm workspaces (not Yarn or pnpm)
+        - Node.js version ≥ 18
+        - TypeScript path aliases are managed via tsconfig.json `paths`
+        - No changes to CI configuration in this task
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What must be true for this task to be considered complete?
+      placeholder: |
+        - [ ] packages/shared/package.json exists and is valid
+        - [ ] All existing tests pass after import path changes
+        - [ ] TypeScript compiles without errors (`npx tsc --noEmit`)
+        - [ ] No runtime behavior has changed
+        - [ ] A short migration note is added to docs/migrations/ if applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation / How to Verify
+      description: Commands or steps to confirm the migration step is complete and safe.
+      placeholder: |
+        1. `npm install` — workspace must resolve correctly
+        2. `npx tsc --noEmit` in each affected app — zero errors
+        3. `npx vitest run` — all tests pass
+        4. Start the dev server and verify the affected feature still works
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: >
+        Links to the parent migration plan, ADRs, prior investigation issues,
+        or relevant documentation.
+      placeholder: |
+        - Parent migration tracking issue: #10
+        - ADR: docs/adr/0008-monorepo-structure.md
+        - Prior spike: #14
+    validations:
+      required: false

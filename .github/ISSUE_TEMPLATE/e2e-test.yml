@@ -1,0 +1,149 @@
+name: E2E Test
+description: Add end-to-end tests for a complete user-facing flow using an E2E testing framework.
+title: "e2e-test: "
+labels:
+  - e2e-test
+  - ai-task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to add E2E tests that exercise a real user journey through
+        the application. E2E tests run against a built application and should not mock
+        business logic unless unavoidable.
+
+  - type: input
+    id: flow_name
+    attributes:
+      label: Flow / Journey Name
+      description: Short, descriptive name for the user journey being tested.
+      placeholder: e.g. Guest Checkout, Account Registration, Password Reset
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target_platform
+    attributes:
+      label: Target Platform
+      description: Which platform does this E2E test target?
+      options:
+        - Web (browser)
+        - iOS (React Native)
+        - Android (React Native)
+        - Web + iOS
+        - Web + Android
+        - All platforms
+    validations:
+      required: true
+
+  - type: dropdown
+    id: framework
+    attributes:
+      label: E2E Framework
+      description: Which testing framework should be used?
+      options:
+        - Playwright
+        - Cypress
+        - Detox (React Native)
+        - Other (describe in Additional Context)
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_journeys
+    attributes:
+      label: User Journeys to Cover
+      description: >
+        Describe each complete journey that must be tested. Write from the user's perspective,
+        step by step, including the expected outcome.
+      placeholder: |
+        Journey 1 — Successful registration:
+          1. User opens the registration screen
+          2. Fills in name, email, and password
+          3. Taps "Create Account"
+          4. Sees a confirmation screen with their name
+        
+        Journey 2 — Registration with duplicate email:
+          1. User fills in an email address already in use
+          2. Taps "Create Account"
+          3. Sees an error message: "An account with this email already exists"
+    validations:
+      required: true
+
+  - type: textarea
+    id: entry_state
+    attributes:
+      label: Entry State / Prerequisites
+      description: >
+        Describe the application state or data setup required before each test begins.
+      placeholder: |
+        - App is freshly installed / local storage is cleared
+        - Test user account exists: test+e2e@example.com / Password123!
+        - Backend is running against the staging environment
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_data
+    attributes:
+      label: Test Data
+      description: >
+        Specify any test data, seed scripts, or environment variables required
+        to run the E2E tests reliably.
+      placeholder: |
+        - Seed script: scripts/seed-e2e-users.ts
+        - Environment: E2E_BASE_URL=https://staging.example.com
+        - Test credentials should come from environment variables, not hardcoded values
+    validations:
+      required: false
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of Scope
+      description: >
+        Explicitly list any flows, edge cases, or screens that should NOT be covered
+        by this E2E test issue.
+      placeholder: |
+        - Social login (OAuth) — separate issue
+        - Profile editing after registration
+        - Email verification flow
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: What must be true for this task to be considered complete?
+      placeholder: |
+        - [ ] All listed journeys have corresponding E2E tests
+        - [ ] Tests pass reliably in CI (no flakiness)
+        - [ ] Tests run against the staging environment without modification
+        - [ ] Sensitive credentials are read from environment variables, not hardcoded
+        - [ ] No existing E2E tests are broken
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation / How to Verify
+      description: Command to run the E2E tests and confirm results.
+      placeholder: |
+        Run: `npx playwright test e2e/registration.spec.ts --project=chromium`
+        All tests must pass. Check the HTML report: `npx playwright show-report`
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Links to related issues, test infrastructure docs, or CI setup.
+      placeholder: |
+        - E2E setup guide: docs/e2e-testing.md
+        - Related integration test issue: #67
+        - CI workflow: .github/workflows/e2e.yml
+    validations:
+      required: false
