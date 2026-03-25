@@ -1,0 +1,25 @@
+name: AI Agent on Issue Assignment
+
+on:
+  issues:
+    types: [assigned]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  call-ai-agent:
+    if: github.event.assignee.login == 'ltu-ai-dev'
+    uses: ./.github/workflows/ai-agent.yml
+    with:
+      mode: assignment
+      issue_number: ${{ github.event.issue.number }}
+      branch_name: ai/issue-${{ github.event.issue.number }}
+    secrets:
+      GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
