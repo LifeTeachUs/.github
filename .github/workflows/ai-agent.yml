@@ -1,0 +1,188 @@
+name: AI Agent
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: "assignment or review"
+        required: true
+        type: string
+      issue_number:
+        description: "Issue number for assignment mode"
+        required: false
+        type: string
+      pr_number:
+        description: "PR number for review mode"
+        required: false
+        type: string
+      branch_name:
+        description: "Preferred branch name to use"
+        required: false
+        type: string
+    secrets:
+      GH_APP_ID:
+        required: true
+      GH_APP_PRIVATE_KEY:
+        required: true
+      AWS_ROLE_TO_ASSUME:
+        required: true
+      AWS_REGION:
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+concurrency:
+  group: ai-agent-${{ inputs.issue_number || inputs.pr_number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  ai-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create GitHub App installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Determine context
+        id: ctx
+        shell: bash
+        run: |
+          MODE="${{ inputs.mode }}"
+
+          if [ "$MODE" = "assignment" ]; then
+            ISSUE_NUMBER="${{ inputs.issue_number }}"
+            BRANCH="${{ inputs.branch_name }}"
+            if [ -z "$BRANCH" ]; then
+              BRANCH="ai/issue-${ISSUE_NUMBER}"
+            fi
+
+            echo "mode=assignment" >> "$GITHUB_OUTPUT"
+            echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
+            echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          elif [ "$MODE" = "review" ]; then
+            PR_NUMBER="${{ inputs.pr_number }}"
+            BRANCH="${{ inputs.branch_name }}"
+
+            echo "mode=review" >> "$GITHUB_OUTPUT"
+            echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+            echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unsupported mode: $MODE"
+            exit 1
+          fi
+
+      - name: Check whether branch exists on origin
+        id: branch-check
+        shell: bash
+        run: |
+          BRANCH="${{ steps.ctx.outputs.branch }}"
+          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Find open PR for branch
+        id: pr-check
+        uses: actions/github-script@v7
+        env:
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const branch = process.env.BRANCH;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const prs = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "open",
+              head: `${owner}:${branch}`
+            });
+
+            if (prs.data.length > 0) {
+              core.setOutput("exists", "true");
+              core.setOutput("number", String(prs.data[0].number));
+              core.setOutput("url", prs.data[0].html_url);
+            } else {
+              core.setOutput("exists", "false");
+              core.setOutput("number", "");
+              core.setOutput("url", "");
+            }
+
+      - name: Run Claude Code via Bedrock
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          use_bedrock: "true"
+          prompt: |
+            You are working in repository ${{ github.repository }}.
+
+            Follow CLAUDE.md strictly.
+
+            Execution mode: ${{ steps.ctx.outputs.mode }}
+
+            Repository context:
+            - Preferred branch: ${{ steps.ctx.outputs.branch }}
+            - Branch already exists on origin: ${{ steps.branch-check.outputs.exists }}
+            - Existing open PR for branch: ${{ steps.pr-check.outputs.exists }}
+            - Existing open PR number: ${{ steps.pr-check.outputs.number }}
+
+            Global rules:
+            - Keep changes minimal and strictly in scope.
+            - Do not introduce new dependencies unless explicitly required.
+            - Do not refactor unrelated files.
+            - If the preferred branch already exists, continue working on that same branch.
+            - If the preferred branch does not exist, create it.
+            - If an open PR already exists for this branch, update that PR instead of opening a new one.
+            - Run relevant validation if applicable.
+            - Commit and push your changes.
+
+            Assignment mode instructions:
+            - Read GitHub issue #${{ steps.ctx.outputs.issue_number }} carefully.
+            - Understand the goal, scope, and constraints before changing code.
+            - Use branch: ${{ steps.ctx.outputs.branch }}.
+            - Implement the requested change.
+            - If there is no open PR yet for this branch, open one and link it to the issue.
+            - If a PR already exists, update the existing PR instead of opening a new one.
+
+            Review mode instructions:
+            - Read PR #${{ steps.ctx.outputs.pr_number }} completely, including:
+              - the review summary,
+              - all review comments,
+              - all inline comments,
+              - unresolved discussion threads.
+            - Work only on the existing branch: ${{ steps.ctx.outputs.branch }}.
+            - Apply the requested review changes and directly related fixes only.
+            - Do not open a new PR.
+            - Push additional commits to the same branch.
+
+      - name: Summarize result
+        if: always()
+        run: |
+          echo "Mode: ${{ steps.ctx.outputs.mode }}"
+          echo "Branch: ${{ steps.ctx.outputs.branch }}"
+          echo "Existing branch: ${{ steps.branch-check.outputs.exists }}"
+          echo "Existing open PR: ${{ steps.pr-check.outputs.exists }}"
+          echo "Existing open PR number: ${{ steps.pr-check.outputs.number }}"
