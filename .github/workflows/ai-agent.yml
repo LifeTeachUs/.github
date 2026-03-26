@@ -97,7 +97,6 @@ jobs:
         env:
           BRANCH: ${{ steps.ctx.outputs.branch }}
         with:
-          github-token: ${{ steps.app-token.outputs.token }}
           script: |
             const branch = process.env.BRANCH;
             const owner = context.repo.owner;
@@ -123,7 +122,6 @@ jobs:
       - name: Run Claude Code via Bedrock
         uses: anthropics/claude-code-action@v1
         with:
-          github_token: ${{ steps.app-token.outputs.token }}
           use_bedrock: "true"
           prompt: |
             You are working in repository ${{ github.repository }}.
