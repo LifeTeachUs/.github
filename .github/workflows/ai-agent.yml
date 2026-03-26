@@ -158,6 +158,7 @@ jobs:
             - Implement the requested change.
             - If there is no open PR yet for this branch, open one and link it to the issue.
             - If a PR already exists, update the existing PR instead of opening a new one.
+            - Title the PR exactly like this: "AI: Issue#${{ steps.ctx.outputs.issue_number }} [issue title]
 
             Review mode instructions:
             - Read PR #${{ steps.ctx.outputs.pr_number }} completely, including:
