@@ -171,7 +171,7 @@ jobs:
             - Do not open a new PR.
             - Push additional commits to the same branch.
 
-            After creating or updating the PR, move the issue to "Ready For Review" in the project board.
+            After creating or updating the PR, move the issue to "Ready for Review" status in the GitHub Project board called "AI Tasks" using the gh CLI. Use `gh project item-list` to find the project and item, then `gh project item-edit` to update the status field.
 
       - name: Summarize result
         if: always()
