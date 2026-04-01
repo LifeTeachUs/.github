@@ -30,6 +30,7 @@ permissions:
   pull-requests: write
   issues: write
   id-token: write
+  actions: write
 
 concurrency:
   group: ai-agent-${{ inputs.issue_number || inputs.pr_number || github.run_id }}
