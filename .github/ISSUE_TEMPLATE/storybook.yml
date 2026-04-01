@@ -1,6 +1,6 @@
 name: Storybook
 description: Create or improve Storybook stories for a component.
-title: "Storybook "
+title: "Storybook: "
 labels:
   - storybook
   - ai-task
@@ -28,6 +28,37 @@ body:
       placeholder: e.g. src/components/global/Avatar/index.tsx
     validations:
       required: true
+
+  - type: dropdown
+    id: rnw_compatible
+    attributes:
+      label: React Native Web Compatible?
+      description: >
+        Is this component compatible with React Native Web (i.e. does it render
+        correctly in a browser without native-only dependencies)?
+        If unsure, select "Unknown". If "No" or "Unknown", the component will be
+        excluded from Storybook's story discovery in main.ts until compatibility is resolved.
+      options:
+        - "Yes"
+        - "No"
+        - "Unknown"
+    validations:
+      required: true
+
+  - type: textarea
+    id: rnw_blockers
+    attributes:
+      label: React Native Web Blockers
+      description: >
+        If not RNW compatible, list the native-only dependencies or APIs that
+        prevent web rendering. This helps track what needs to be resolved for
+        the RNW migration.
+      placeholder: |
+        - Uses react-native-maps (no web support)
+        - Uses expo-camera (native only)
+        - Uses react-native-reanimated gestures not supported on web
+    validations:
+      required: false
 
   - type: textarea
     id: states_to_cover
@@ -91,6 +122,7 @@ body:
         - [ ] Controls panel exposes the listed props
         - [ ] Stories render without console errors
         - [ ] a11y addon reports no critical violations
+        - [ ] If not RNW compatible: component is excluded in .storybook/main.ts
     validations:
       required: true
 
