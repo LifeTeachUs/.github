@@ -1,0 +1,126 @@
+name: Product Change
+description: Request a small UI or content change that can be implemented by the AI agent.
+title: "Product: "
+labels:
+  - product-change
+  - ai-task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to request small, well-defined UI or content changes.
+        The more specific you are, the better the result. Screenshots and exact text help a lot!
+
+        **Good examples for this template:**
+        - Replace a link or URL
+        - Change a text or label
+        - Update a color or style
+        - Add a simple button or modal
+        - Show/hide an element
+
+        **Not suitable for this template:**
+        - New features or screens
+        - Changes to business logic
+        - API or backend changes
+
+  - type: dropdown
+    id: change_type
+    attributes:
+      label: Type of Change
+      description: What kind of change is this?
+      options:
+        - Text / Copy change
+        - Link / URL change
+        - Color / Style change
+        - Add button
+        - Add modal
+        - Show / hide element
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Where is the change needed?
+      description: Describe where in the app the change should happen. Be as specific as possible.
+      placeholder: e.g. "Home screen, below the welcome banner" or "Profile page, Edit button"
+    validations:
+      required: true
+
+  - type: input
+    id: file_path
+    attributes:
+      label: File Path (if known)
+      description: If you know the file or component, add it here. Otherwise leave blank.
+      placeholder: e.g. src/views/Home/index.tsx
+    validations:
+      required: false
+
+  - type: textarea
+    id: current_state
+    attributes:
+      label: Current State
+      description: What does it look like or say right now?
+      placeholder: |
+        e.g. The button says "Submit" and links to https://old-url.com
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired_state
+    attributes:
+      label: Desired State
+      description: What should it look like or say after the change?
+      placeholder: |
+        e.g. The button should say "Send" and link to https://new-url.com
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / References
+      description: Add screenshots, Figma links, or any visual reference that helps understand the change.
+      placeholder: |
+        - Screenshot of current state
+        - Figma link: https://figma.com/...
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How do we know this change is done correctly?
+      placeholder: |
+        - [ ] Text reads "Send" instead of "Submit"
+        - [ ] Link opens https://new-url.com
+        - [ ] No other elements are affected
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints
+      options:
+        - label: >
+            No business logic, backend calls, or unrelated UI may be changed
+            as part of this task unless explicitly described above.
+          required: true
+        - label: >
+            This change is limited in scope and does not require a new screen or feature.
+          required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Anything else that helps the AI agent implement this correctly.
+      placeholder: |
+        - This only affects the mobile app / web app
+        - Only change for logged-in users
+        - Related to campaign XY
+    validations:
+      required: false
