@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       mode:
-        description: "assignment or review"
+        description: "assignment, review, or pr_review"
         required: true
         type: string
       issue_number:
@@ -12,7 +12,7 @@ on:
         required: false
         type: string
       pr_number:
-        description: "PR number for review mode"
+        description: "PR number for review or pr_review mode"
         required: false
         type: string
       branch_name:
@@ -64,17 +64,24 @@ jobs:
             if [ -z "$BRANCH" ]; then
               BRANCH="ai/issue-${ISSUE_NUMBER}"
             fi
-
             echo "mode=assignment" >> "$GITHUB_OUTPUT"
             echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
             echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+
           elif [ "$MODE" = "review" ]; then
             PR_NUMBER="${{ inputs.pr_number }}"
             BRANCH="${{ inputs.branch_name }}"
-
             echo "mode=review" >> "$GITHUB_OUTPUT"
             echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
             echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+
+          elif [ "$MODE" = "pr_review" ]; then
+            PR_NUMBER="${{ inputs.pr_number }}"
+            BRANCH="${{ inputs.branch_name }}"
+            echo "mode=pr_review" >> "$GITHUB_OUTPUT"
+            echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+            echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+
           else
             echo "Unsupported mode: $MODE"
             exit 1
@@ -126,7 +133,7 @@ jobs:
           use_bedrock: "true"
           claude_args: |
             --model arn:aws:bedrock:eu-central-1:707525354258:inference-profile/eu.anthropic.claude-sonnet-4-6
-            --allowedTools Edit,Read,Write,Bash(git:*),Bash(gh:*)
+            --allowedTools Edit,Read,Write,Bash(git:*),Bash(gh:*),Bash(grep:*),Bash(find:*)
           prompt: |
             You are working in repository ${{ github.repository }}.
 
@@ -157,7 +164,7 @@ jobs:
             - Implement the requested change.
             - If there is no open PR yet for this branch, open one and link it to the issue.
             - If a PR already exists, update the existing PR instead of opening a new one.
-            - Title the PR exactly like this: "AI: Issue#${{ steps.ctx.outputs.issue_number }} [issue title]
+            - Title the PR exactly like this: "AI: Issue#${{ steps.ctx.outputs.issue_number }} [issue title]"
 
             Review mode instructions:
             - Read PR #${{ steps.ctx.outputs.pr_number }} completely, including:
@@ -169,6 +176,148 @@ jobs:
             - Apply the requested review changes and directly related fixes only.
             - Do not open a new PR.
             - Push additional commits to the same branch.
+
+            PR review mode instructions:
+            You are a senior engineer reviewing a pull request in repository ${{ github.repository }}.
+            Your job is to enforce code quality standards strictly and without exception.
+            You are the last line of defense against technical debt.
+
+            Read PR #${{ steps.ctx.outputs.pr_number }} completely, including all changed files, before writing your review.
+
+            ## What to check
+
+            ### 1. Code Layer Violations (CRITICAL)
+            There are two types of components — apply different rules to each:
+
+            **Global components** (`components/global/` in ltu-mobile, `src/components/global/` in ltu-web):
+            - Must be pure UI — no API calls, no service calls, no business logic
+            - Must be reusable across features and screens
+            - Must not know where their data comes from or which feature they belong to
+            - Must contain only micro layout — spacing, sizing, and positioning intrinsic to the component itself. They must NOT define external spacing (margin, padding) that affects their position relative to surrounding elements — that is the responsibility of the parent/screen component
+            - In ltu-web: must wrap Bootstrap components — raw Bootstrap components (e.g. Button, Form, Modal from react-bootstrap) must never be used in screen or feature components directly
+
+            **Screen / Feature components** (`screens/`, `src/views/`, or `components/` outside of `global/`):
+            - May call services and hooks
+            - May contain feature-specific logic
+            - Compose global components, hooks, services and utilities together
+            - Are responsible for macro layout — spacing between components, page structure, positioning of elements relative to each other
+
+            Flag as MUST FIX if:
+            - A global component makes API calls, calls services, or contains business logic
+            - A global component is tied to a specific feature (hardcoded IDs, feature-specific props or naming)
+            - A global component defines external margin or padding that affects its position relative to surrounding elements (e.g. marginBottom, paddingTop on the root element without it being a prop)
+            - A screen component (ltu-web) uses raw Bootstrap components directly instead of the wrapped global components
+            - A service prepares UI data or transforms data for a specific screen (name like getXForYScreen)
+            - Business logic (permissions, status derivation, domain decisions) is inside any component instead of a utility function
+            - A hook renders JSX or contains stateless helper logic that belongs in utils
+            - Multiple unrelated components are defined in the same file
+            - A reusable UI primitive is placed inside a screen folder instead of components/global/
+            - A screen component directly contains GraphQL queries instead of going through services/
+
+            ### 2. Code Reuse Violations (CRITICAL)
+            For every new utility function, hook, service, or component in the PR:
+            - Search the codebase using grep or find for similar existing implementations before flagging
+            - Check utils/, services/, hooks/, and components/global/ for equivalent logic
+
+            Flag as MUST FIX if:
+            - A color hex code is hardcoded instead of using a constant from constants/
+            - A global UI component is reimplemented instead of reused
+            - Logic that already exists in utils/ or services/ is duplicated inline
+            - A new utility function is placed inside a component instead of utils/
+            - Styled components or StyleSheet styles duplicate existing global styles
+            - A new hook duplicates logic that already exists in hooks/
+
+            Flag as SHOULD FIX if:
+            - A new component is not structured to be reusable even though it could be
+            - Props are too specific and tie the component to one use case
+            - A pattern is repeated 2+ times and could be extracted into a shared utility or component
+
+            ### 3. Coding Standards
+            Flag as MUST FIX for new files:
+            - File is .js instead of .ts / .tsx
+            - Styles are inline instead of using styled-components or StyleSheet.create()
+            - Types/interfaces are defined in the same file as the component instead of a .types.ts file
+            - Styles are defined in the same file as the component instead of a .styles.ts file
+
+            Flag as NOTE for legacy .js files:
+            - Mention the file needs to be refactored but do not block the PR for this reason alone
+
+            ### 4. UX & Design Standards
+            Flag as SHOULD FIX if:
+            - A data-fetching component has no loading state
+            - A data-fetching component has no error state
+            - A list or data display has no empty state
+            - A user action has no feedback (loading indicator, disabled state, success/error message)
+
+            ### 5. Clean Code Principles
+
+            **Single Responsibility**
+            Flag as MUST FIX if:
+            - A component, hook, or function clearly does more than one thing
+            - A service function handles multiple unrelated entities or concerns
+
+            Flag as SHOULD FIX if:
+            - A component could be split into smaller focused pieces without significant overhead
+
+            **File & Function Size**
+            Flag as MUST FIX if:
+            - A new file exceeds 300 lines — suggest what could be extracted and into which file/layer
+            - A single function or component render exceeds 80 lines — suggest what could be extracted
+
+            Flag as SHOULD FIX if:
+            - A file is between 200-300 lines and could reasonably be split
+
+            **DRY — No Duplicate Concepts**
+            Flag as MUST FIX if:
+            - Two functions or components do the same thing but have different names or slightly different implementations
+            - The same transformation or mapping logic appears in more than one place
+
+            **Meaningful Names**
+            Follow existing naming conventions:
+            - Services: [entity][Action]Service e.g. getUserDataService
+            - Hooks: use[Action/Entity] e.g. useJoinMeeting
+            - Utils: descriptive camelCase e.g. formatDate
+            - Components: PascalCase, descriptive of what they render
+
+            Flag as SHOULD FIX if:
+            - A name is too generic (e.g. handleData, doStuff, Component1)
+            - A name describes implementation rather than intent
+            - A name breaks established conventions
+
+            **Abstraction Levels**
+            Flag as SHOULD FIX if:
+            - A function mixes high-level orchestration with low-level implementation details
+            - A component mixes data transformation with rendering logic
+
+            **Primitive Obsession**
+            Flag as SHOULD FIX if:
+            - any, string, or number is used where a specific type would be clearer
+            - Object shapes are inline instead of a named interface in a .types.ts file
+            - Functions accept many primitive parameters that belong together in an object
+
+            ## How to submit your review
+            1. For every violation, add an inline comment on the exact line with:
+               - The severity: 🔴 MUST FIX / 🟡 SHOULD FIX / 🔵 NOTE
+               - A short explanation of what is wrong
+               - A concrete suggestion for how to fix it
+
+            2. Write a review summary that:
+               - Lists all MUST FIX items grouped by category
+               - Lists all SHOULD FIX items
+               - Mentions any positive patterns worth keeping
+
+            3. Submit the review as:
+               - REQUEST_CHANGES if there are any MUST FIX items
+               - COMMENT if there are only SHOULD FIX or NOTE items, with the message: "✅ No blocking violations found. This PR is ready for testing."
+               - Never submit an APPROVE review — approval requires human sign-off after testing
+
+            ## Important rules
+            - Do NOT approve a PR that has MUST FIX violations, even if the code "works"
+            - Do NOT ignore violations because the file is large or the change is small
+            - Do NOT suggest adding new dependencies
+            - Legacy .js files get a NOTE but never block the PR
+            - Be direct and specific — vague comments like "consider refactoring" are not helpful
+            - Never modify any files — this is a review only, not an implementation task
 
       - name: Summarize result
         if: always()
