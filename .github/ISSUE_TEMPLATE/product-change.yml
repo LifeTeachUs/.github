@@ -4,6 +4,7 @@ title: "Product: "
 labels:
   - product-change
   - ai-task
+  - product
 body:
   - type: markdown
     attributes:
