@@ -92,7 +92,6 @@ jobs:
       - name: Notify Slack on product-change assignment
         if: |
           inputs.mode == 'assignment' &&
-          secrets.SLACK_AI_WEBHOOK_URL != '' &&
           contains(github.event.issue.labels.*.name, 'product')
         shell: bash
         env:
@@ -102,6 +101,10 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
         run: |
+          if [ -z "$SLACK_WEBHOOK" ]; then
+            echo "SLACK_AI_WEBHOOK_URL not configured, skipping notification."
+            exit 0
+          fi
           curl -s -X POST "$SLACK_WEBHOOK" \
             -H "Content-Type: application/json" \
             -d "{
