@@ -24,6 +24,8 @@ on:
         required: true
       AWS_REGION:
         required: true
+      SLACK_AI_WEBHOOK_URL:
+        required: false
 
 permissions:
   contents: write
@@ -86,6 +88,25 @@ jobs:
             echo "Unsupported mode: $MODE"
             exit 1
           fi
+
+      - name: Notify Slack on product-change assignment
+        if: |
+          inputs.mode == 'assignment' &&
+          secrets.SLACK_AI_WEBHOOK_URL != '' &&
+          contains(github.event.issue.labels.*.name, 'product')
+        shell: bash
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_AI_WEBHOOK_URL }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          REPO: ${{ github.repository }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          curl -s -X POST "$SLACK_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \":robot_face: *AI Dev started working on a product-change ticket*\n*Issue:* <${ISSUE_URL}|#${ISSUE_NUMBER} — ${ISSUE_TITLE}>\n*Repo:* \`${REPO}\`\"
+            }"
 
       - name: Check whether branch exists on origin
         id: branch-check
@@ -155,7 +176,9 @@ jobs:
             - If the preferred branch does not exist, create it.
             - If an open PR already exists for this branch, update that PR instead of opening a new one.
             - Run relevant validation if applicable.
-            - Commit and push your changes.
+            - Commit your changes.
+            - If this is an ltu-web assignment, create a release tag BEFORE pushing (see below).
+            - Push your changes only after the tag has been created (if applicable).
 
             Assignment mode instructions:
             - Read GitHub issue #${{ steps.ctx.outputs.issue_number }} carefully.
@@ -165,6 +188,21 @@ jobs:
             - If there is no open PR yet for this branch, open one and link it to the issue.
             - If a PR already exists, update the existing PR instead of opening a new one.
             - Title the PR exactly like this: "AI: Issue#${{ steps.ctx.outputs.issue_number }} [issue title]"
+
+            ltu-web release tag instructions (assignment mode only):
+            - These instructions apply ONLY when the repository is ltu-web.
+            - After committing your changes but BEFORE pushing to origin, create an annotated git tag.
+            - Tag name format: release-ai-${{ steps.ctx.outputs.issue_number }}
+            - Tag message format: "[type]: [semantic release description of the task]"
+              - Replace [type] with exactly one of:
+                - Feat   — new functionality visible to end users
+                - Fix    — bug fixes and small improvements
+                - Tech   — non-user-facing changes (refactors, config, tooling, tests, etc.)
+              - Replace [semantic release description of the task] with a concise description
+                of what was implemented, written in the imperative mood (e.g. "add user profile avatar upload").
+              - Example: "Feat: add dark mode toggle to settings screen"
+            - Create the tag with: git tag -a release-ai-${{ steps.ctx.outputs.issue_number }} -m "[type]: [description]"
+            - Push both the branch and the tag: git push origin ${{ steps.ctx.outputs.branch }} && git push origin release-ai-${{ steps.ctx.outputs.issue_number }}
 
             Review mode instructions:
             - Read PR #${{ steps.ctx.outputs.pr_number }} completely, including:
