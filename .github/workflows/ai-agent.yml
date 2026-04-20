@@ -247,6 +247,7 @@ jobs:
             - May contain feature-specific logic
             - Compose global components, hooks, services and utilities together
             - Are responsible for macro layout — spacing between components, page structure, positioning of elements relative to each other
+            - Subcomponents within a feature folder (e.g. modal children) may call hooks and access context directly. There is no requirement to centralize hook calls in a parent component unless the same logic is duplicated across multiple subcomponents.
 
             Flag as MUST FIX if:
             - A global component makes API calls, calls services, or contains business logic
@@ -301,6 +302,8 @@ jobs:
             Flag as MUST FIX if:
             - A component, hook, or function clearly does more than one thing
             - A service function handles multiple unrelated entities or concerns
+            - A utility function prepares or transforms data specifically for one screen or component
+            - A utils file bundles unrelated helper functions that have no common concern
 
             Flag as SHOULD FIX if:
             - A component could be split into smaller focused pieces without significant overhead
@@ -361,7 +364,7 @@ jobs:
             - Do NOT approve a PR that has MUST FIX violations, even if the code "works"
             - Do NOT ignore violations because the file is large or the change is small
             - Do NOT suggest adding new dependencies
-            - Legacy .js files get a NOTE but never block the PR
+            - Legacy .js files get a NOTE but must never block the PR. This applies to all violations found in .js files — including raw Bootstrap usage, missing types, and inline styles. Do not flag anything in a .js file as MUST FIX or SHOULD FIX.
             - Be direct and specific — vague comments like "consider refactoring" are not helpful
             - Never modify any files — this is a review only, not an implementation task
 
