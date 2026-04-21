@@ -112,7 +112,6 @@ body:
           required: true
         - label: >
             This change is limited in scope and does not require a new screen or feature.
-          required: true
 
   - type: textarea
     id: additional_context
