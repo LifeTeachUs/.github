@@ -367,6 +367,7 @@ jobs:
             - Legacy .js files get a NOTE but must never block the PR. This applies to all violations found in .js files — including raw Bootstrap usage, missing types, and inline styles. Do not flag anything in a .js file as MUST FIX or SHOULD FIX.
             - Be direct and specific — vague comments like "consider refactoring" are not helpful
             - Never modify any files — this is a review only, not an implementation task
+            - Ignore all files inside the `amplify/` directory — do not review, comment on, or flag any violations in files under that path
 
       - name: Summarize result
         if: always()
