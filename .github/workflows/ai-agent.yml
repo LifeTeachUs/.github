@@ -19,6 +19,16 @@ on:
         description: "Preferred branch name to use"
         required: false
         type: string
+      is_product:
+        description: "Whether the issue is labelled 'product' (routes the task to the testing staging env)"
+        required: false
+        type: boolean
+        default: false
+      base_branch:
+        description: "Base branch to cut the feature branch from and target the PR against"
+        required: false
+        type: string
+        default: main
     secrets:
       AWS_ROLE_TO_ASSUME:
         required: true
@@ -71,6 +81,7 @@ jobs:
             echo "mode=assignment" >> "$GITHUB_OUTPUT"
             echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
             echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+            echo "base=${{ inputs.base_branch }}" >> "$GITHUB_OUTPUT"
 
           elif [ "$MODE" = "review" ]; then
             PR_NUMBER="${{ inputs.pr_number }}"
@@ -90,6 +101,26 @@ jobs:
             echo "Unsupported mode: $MODE"
             exit 1
           fi
+
+      - name: Sync main into testing
+        if: |
+          inputs.mode == 'assignment' &&
+          inputs.is_product == true &&
+          inputs.base_branch == 'testing'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          if git ls-remote --exit-code --heads origin testing > /dev/null 2>&1; then
+            echo "testing exists — merging latest main into it"
+            git checkout -B testing origin/testing
+            git merge --no-edit origin/main
+          else
+            echo "testing does not exist — seeding it from main"
+            git checkout -B testing origin/main
+          fi
+          git push origin testing
 
       - name: Notify Slack on product-change assignment
         if: |
@@ -172,6 +203,7 @@ jobs:
 
             Repository context:
             - Preferred branch: ${{ steps.ctx.outputs.branch }}
+            - Base branch (cut the feature branch from this, and target the PR against it): ${{ steps.ctx.outputs.base }}
             - Branch already exists on origin: ${{ steps.branch-check.outputs.exists }}
             - Existing open PR for branch: ${{ steps.pr-check.outputs.exists }}
             - Existing open PR number: ${{ steps.pr-check.outputs.number }}
@@ -181,7 +213,7 @@ jobs:
             - Do not introduce new dependencies unless explicitly required.
             - Do not refactor unrelated files.
             - If the preferred branch already exists, continue working on that same branch.
-            - If the preferred branch does not exist, create it.
+            - If the preferred branch does not exist, create it FROM the base branch ${{ steps.ctx.outputs.base }} (e.g. `git fetch origin ${{ steps.ctx.outputs.base }} && git checkout -b ${{ steps.ctx.outputs.branch }} origin/${{ steps.ctx.outputs.base }}`).
             - If an open PR already exists for this branch, update that PR instead of opening a new one.
             - Run relevant validation if applicable.
             - Commit your changes.
@@ -191,9 +223,9 @@ jobs:
             Assignment mode instructions:
             - Read GitHub issue #${{ steps.ctx.outputs.issue_number }} carefully.
             - Understand the goal, scope, and constraints before changing code.
-            - Use branch: ${{ steps.ctx.outputs.branch }}.
+            - Use branch: ${{ steps.ctx.outputs.branch }}, cut from the base branch ${{ steps.ctx.outputs.base }}.
             - Implement the requested change.
-            - If there is no open PR yet for this branch, open one and link it to the issue.
+            - If there is no open PR yet for this branch, open one against the base branch (`gh pr create --base ${{ steps.ctx.outputs.base }} ...`) and link it to the issue.
             - If a PR already exists, update the existing PR instead of opening a new one.
             - Title the PR exactly like this: "AI: Issue#${{ steps.ctx.outputs.issue_number }} [issue title]"
 
