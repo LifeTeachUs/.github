@@ -102,25 +102,11 @@ jobs:
             exit 1
           fi
 
-      - name: Sync main into testing
-        if: |
-          inputs.mode == 'assignment' &&
-          inputs.is_product == true &&
-          inputs.base_branch == 'testing'
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          if git ls-remote --exit-code --heads origin testing > /dev/null 2>&1; then
-            echo "testing exists — merging latest main into it"
-            git checkout -B testing origin/testing
-            git merge --no-edit origin/main
-          else
-            echo "testing does not exist — seeding it from main"
-            git checkout -B testing origin/main
-          fi
-          git push origin testing
+      # NOTE: testing-env deployment for product review is handled in each
+      # repo's own workflows (e.g. ltu-web's ai-testing-deploy.yml /
+      # ai-testing-redeploy.yml, ltu-mobile's ai-ota-deploy.yml /
+      # ai-ota-redeploy.yml), NOT here. This reusable workflow always cuts the
+      # feature branch from — and targets the PR against — `base_branch` (main).
 
       - name: Notify Slack on product-change assignment
         if: |
